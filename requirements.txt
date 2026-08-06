@@ -1,0 +1,7 @@
+openai-agents
+ddgs==9.11.4
+edgartools
+gnews
+gradio==6.5.1
+streamlit==1.25.0
+yfinance
