@@ -1,16 +1,16 @@
-Stock Sentiment AI Agent
+# Stonxs — Stock Sentiment AI Agent
 
-A small Streamlit application that runs a set of AI "agents" to fetch stock prices, surface recent news, and produce a short sentiment read plus a more detailed sentiment/filings-based forecast. The app exists to provide evidence-based, tool-sourced signals for a single ticker symbol (no trading or portfolio management features).
+A Streamlit application that runs a small set of agent-like functions to fetch a stock's price, gather recent news, and produce a short sentiment read plus a more detailed sentiment/filings-based forecast for a single ticker symbol.
 
-Features
+## Features
 
-- Lookup the current stock price for a ticker using yfinance
-- Pull recent stock-related news and surface short sentiment bullets
-- Run a detailed sentiment forecast that consults price, news, web search, quarterly financials, and SEC (EDGAR) filings
-- Basic input security checks (simple pattern checks and an AI-based filter) to block non-ticker inputs
-- Streamlit UI with configurable LLM provider settings (local Ollama or a custom cloud endpoint)
+- Get the latest price for a ticker using yfinance (backend/tools.py)
+- Fetch recent stock news from yfinance and Google News (backend/tools.py)
+- Run a multi-source sentiment forecast that consults price, news, web search, quarterly financials, and EDGAR filings (backend/stock_agents.py)
+- Basic input filtering: simple pattern checks and an LLM-based safety check to block non-ticker inputs (backend/security.py)
+- Streamlit UI that lets you choose an LLM provider (local Ollama URL or a custom cloud endpoint) and the model name (frontend/frontend.py)
 
-Tech stack / built with
+## Tech Stack
 
 - Python
 - Streamlit (UI)
@@ -18,71 +18,94 @@ Tech stack / built with
 - ddgs (DuckDuckGo search helper)
 - gnews (Google News wrapper)
 - edgartools (EDGAR access)
-- openai-agents (agent/Runner abstractions used by the project)
-- Additional libraries listed in <./requirements.txt> (see link below)
+- openai-agents (agent and Runner abstractions used by the backend)
 
-Prerequisites
+Dependency list is in `requirements.txt` at the repository root.
 
-- Python 3.8 or later (a virtual environment is recommended)
-- Git (to clone the repository)
-- Network access (the app makes web/API calls for market data, news, and LLM providers)
+## Prerequisites
 
-Installation
+- Python (create a virtual environment before running)
+- Git (to clone the repo)
 
-Open Git Bash and run the following commands from the repository root.
+Note: `requirements.txt` pins Streamlit and other libraries; follow the Installation steps below.
 
-1. Create a virtual environment: python -m venv .venv
-2. Activate it in Git Bash: source .venv/Scripts/activate
-3. Install dependencies: pip install -r requirements.txt
+## Installation
 
-Adjust the requirements file name above only if your repository uses a different file; this repository provides <requirements.txt> at the project root.
+Run these commands in Git Bash from the repository root:
 
-Configuration
+```bash
+python -m venv .venv
+source .venv/Scripts/activate
+pip install -r requirements.txt
+```
 
-- The Streamlit UI exposes LLM provider settings in the sidebar. Those settings map to the environment variables the code uses at runtime:
-  - OPENAI_BASE_URL: base URL for the LLM provider (default values are provided in the UI)
-  - OPENAI_API_KEY: API key or token for the provider (the UI stores it in an environment variable before launching calls)
+`requirements.txt` exists at the project root and is used by `setup_check.py` and by the installation step above.
 
-- The frontend code defaults to a local Ollama-like URL (http://localhost:11434/v1) when "Ollama (local)" is chosen in the sidebar and otherwise uses the provided base URL and API key.
+## Usage
 
-- There is a small startup helper <setup_check.py> that will create a .venv and install requirements when run; the app's main entrypoint calls it at startup.
-
-Usage
-
-Run the Streamlit app from Git Bash with:
+Start the Streamlit app from Git Bash:
 
 ```bash
 python -m streamlit run app.py
 ```
 
-This opens the Streamlit app in your browser.
+When the app runs it opens a Streamlit UI in the browser. The first screen shows the page title and a sidebar with LLM provider settings. Enter a ticker (for example `TSLA`) and submit to run the backend agents.
 
-Project structure
+`app.py` calls `setup_check.run_all_checks()` on startup; that helper will create a `.venv` and attempt to install requirements if they are missing.
 
-- <app.py> — project entry point; runs startup checks and launches the Streamlit frontend
-- <frontend/frontend.py> — Streamlit UI and orchestration (page layout, settings, running agents)
-- <backend/> — backend agent definitions and helper tools
-  - <backend/tools.py> — tool functions used by agents (yfinance, web searches, EDGAR access)
-  - <backend/stock_agents.py> — agent definitions and instructions
-  - <backend/security.py> — basic and AI-based input filtering
-- <requirements.txt> — Python dependencies used by the project
-- <setup_check.py> — creates a venv, installs requirements, and validates required files on startup
+## Project structure
 
-Contributing
+Only the files and folders that matter for running and extending the app are listed below.
 
-- If you plan to contribute, ensure the repository runs locally:
-  - Create and activate a virtual environment and install requirements (see Installation)
-  - Run <app.py> or run the Streamlit command above to exercise the app
-- Open a focused pull request with a clear description of the change and a small, self-contained diff
-- If adding or changing dependencies, include a note explaining why and verify the app still starts
+- `app.py` — entry point. Sets up module paths, runs startup checks, and launches the Streamlit frontend.
+- `frontend/frontend.py` — Streamlit UI, provider settings, input validation, and orchestration of agent runs.
+- `backend/tools.py` — functions that fetch data: stock price, analyst recommendations, news, web search, quarterly financials, and EDGAR filings.
+- `backend/stock_agents.py` — agent definitions and instructions that drive which tools get called and how results are formatted.
+- `backend/security.py` — contains `check_message_basic` (pattern checks) and `check_message_with_ai` (calls an Agent via Runner to validate input).
+- `setup_check.py` — helper that creates a `.venv`, installs `requirements.txt`, and asserts required files exist.
+- `requirements.txt` — dependency list used by the project.
 
-License
+There is a `.venv` directory in the repository root (if you cloned or the project was run locally). The code expects the backend and frontend packages to be importable from the project root (see `sys.path` manipulation in `app.py`).
 
-This project is offered under the MIT License. See the <LICENSE> file in the repository root for the full text.
+## Configuration
 
-References and notes
+The Streamlit UI writes two environment variables before running agent calls. You can also set these in your shell if you prefer.
 
-- Entry point: <app.py> (the file that calls into <frontend/frontend.py>)
-- Requirements file found at: <requirements.txt>
-- Startup checks and venv creation are implemented in <setup_check.py>
+- `OPENAI_BASE_URL` — Base URL for the LLM provider. The UI defaults to `http://localhost:11434/v1` for "Ollama (local)" and `https://api.openai.com/v1` when "Custom / Cloud" is chosen (see `frontend/frontend.py`).
+- `OPENAI_API_KEY` — API key or token for the provider. The code sets this to the provided API key or to the literal string `ollama` when left empty.
 
+Model name defaults visible in the UI:
+
+- Local default model: `gemma4:31b-cloud`
+- Cloud default model shown in the UI: `gpt-4o-mini`
+
+Those defaults are set in `frontend/frontend.py` and then written into the corresponding agent objects at runtime.
+
+## Running tests
+
+This repository does not include a test suite or a `tests/` folder.
+
+## Contributing
+
+If you make changes, run the app locally to verify behaviour. Keep changes focused and include a short description of how you tested the change in your pull request.
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` in the repository root.
+
+
+---
+
+Summary of sources and assumptions
+
+- Features and behaviour: taken from `frontend/frontend.py`, `backend/tools.py`, `backend/stock_agents.py`, and `backend/security.py` (the code paths show what the app actually calls and how it validates input).
+- Entry point and startup behaviour: `app.py` calls `setup_check.run_all_checks()` and then `frontend.run_app()`; `setup_check.py` shows venv creation and requirements installation.
+- Dependencies: read from `requirements.txt`.
+- Configuration environment variables and defaults: read from `frontend/frontend.py` (OPENAI_BASE_URL, OPENAI_API_KEY, and the UI defaults for model names).
+
+Assumptions made
+
+- Python version requirement is not explicitly stated in the repository; the README does not pin an exact Python version. The installer commands use the provided `requirements.txt`.
+- No test framework was found; therefore there is no "Running tests" section beyond noting its absence.
+
+If you want a different project title line or a shorter/longer summary for contributors, tell me and I will update the README accordingly.
