@@ -94,18 +94,5 @@ If you make changes, run the app locally to verify behaviour. Keep changes focus
 This project is licensed under the MIT License. See `LICENSE` in the repository root.
 
 
----
 
-Summary of sources and assumptions
 
-- Features and behaviour: taken from `frontend/frontend.py`, `backend/tools.py`, `backend/stock_agents.py`, and `backend/security.py` (the code paths show what the app actually calls and how it validates input).
-- Entry point and startup behaviour: `app.py` calls `setup_check.run_all_checks()` and then `frontend.run_app()`; `setup_check.py` shows venv creation and requirements installation.
-- Dependencies: read from `requirements.txt`.
-- Configuration environment variables and defaults: read from `frontend/frontend.py` (OPENAI_BASE_URL, OPENAI_API_KEY, and the UI defaults for model names).
-
-Assumptions made
-
-- Python version requirement is not explicitly stated in the repository; the README does not pin an exact Python version. The installer commands use the provided `requirements.txt`.
-- No test framework was found; therefore there is no "Running tests" section beyond noting its absence.
-
-If you want a different project title line or a shorter/longer summary for contributors, tell me and I will update the README accordingly.
